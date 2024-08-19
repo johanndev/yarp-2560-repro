@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,19 +16,26 @@ builder.Services.AddAuthentication(options =>
 .AddCookie()
 .AddOpenIdConnect(cfg =>
 {
-    cfg.MapInboundClaims = false;
-    cfg.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    cfg.ResponseType = "code token id_token";
-    cfg.Authority = builder.Configuration["Adfs:Authority"];
-    cfg.ClientId = builder.Configuration["Adfs:ClientId"];
-    cfg.UseTokenLifetime = true;
+    cfg.Authority = "https://demo.duendesoftware.com";
+    cfg.ClientId = "interactive.confidential";
+    cfg.ClientSecret = "secret";
+    cfg.ResponseType = OpenIdConnectResponseType.Code;
+    cfg.ResponseMode = OpenIdConnectResponseMode.FormPost;
 
+    cfg.Scope.Clear();
+    cfg.Scope.Add("openid");
+    cfg.Scope.Add("profile");
+    cfg.Scope.Add("email");
+    // Add any additional scopes you need
+
+    cfg.SaveTokens = true;
+    cfg.GetClaimsFromUserInfoEndpoint = true;
     cfg.UsePkce = true;
 
     cfg.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
     {
-        RoleClaimType = "role",
-        NameClaimType = "upn"
+        NameClaimType = "name",
+        RoleClaimType = "role"
     };
 
     cfg.Events.OnTokenValidated = ctx =>
